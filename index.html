@@ -2,6 +2,7 @@
 <title>観測する名刺</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
+/* Layout: two tonal panes (position / momentum) like the card, joined by a draggable observation rail; stacked on phones, side by side on wide screens. */
 :root{
   --bg:#e9e9e8; --fg:#2f2e30; --muted:#69686b; --line:#c6c5c7;
   --pane-a:#383738; --pane-b:#58575a; --on:#f2f1ee; --on-dim:#b9b8b6; --moon:#ece4cc;
@@ -40,6 +41,7 @@ h1 .en{font-family:var(--mono);font-weight:400;font-size:13px;letter-spacing:.04
 .btn:hover{border-color:var(--fg)}
 .btn:focus-visible,.handle:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 
+/* stage */
 .stage{position:relative;flex:1;min-height:380px;display:grid;grid-template-rows:1fr 1fr;border-radius:14px;overflow:hidden;background:var(--pane-a)}
 .pane{position:relative;min-width:0;min-height:0;overflow:hidden;color:var(--on)}
 .a{background:var(--pane-a)}
@@ -60,6 +62,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:cro
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .obsmsg{margin-top:6px;font-size:12px;min-height:1.4em;color:var(--moon)}
 
+/* keywords: a plain run of words people can catch on */
 .kw{display:flex;flex-direction:column;gap:4px;min-width:0}
 .kw[hidden]{display:none}
 .kwl{font-size:10px;letter-spacing:.14em;color:var(--muted)}
@@ -67,7 +70,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:cro
 .kwt span{display:inline-block;max-width:100%}
 .kwt span:not(:last-child)::after{content:"・";margin-inline:.3em;color:var(--muted)}
 
-.meter{display:flex;align-items:center;gap:18px;min-width:0}
+/* meter: phase-space cell, kept outside the stage so it never covers text */
+.meter{display:flex;align-items:center;gap:14px;min-width:0}
+.meter{gap:18px}
 .meter svg{flex:none;width:112px;height:112px;color:var(--fg);overflow:visible}
 .meter .txt{min-width:0;display:flex;flex-direction:column;gap:2px;color:var(--muted)}
 .meter .gr{display:flex;align-items:baseline;gap:10px}
@@ -75,12 +80,14 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:cro
 .meter b{display:inline-block;min-width:3.6ch;font-size:26px;font-weight:500;line-height:1.3;letter-spacing:.02em;color:var(--fg);font-variant-numeric:tabular-nums}
 .meter .g2{margin-top:2px;font-size:13px;letter-spacing:.06em;overflow-wrap:anywhere}
 
+/* rail */
 .rail{position:absolute;touch-action:none;color:var(--on);user-select:none;-webkit-user-select:none}
 .rail::before{content:"";position:absolute;background:var(--on);opacity:.45}
 .rail .lbl{position:absolute;font-size:10px;letter-spacing:.12em;opacity:.8;pointer-events:none;white-space:nowrap}
 .handle{position:absolute;width:36px;height:36px;border-radius:50%;box-sizing:border-box;border:2px solid var(--on);background:var(--pane-a);transform:translate(-50%,-50%);cursor:grab;display:grid;place-items:center}
 .handle::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--moon)}
 .rail.drag .handle{cursor:grabbing;border-color:var(--moon)}
+/* narrow: vertical rail at the right edge, top = position, bottom = momentum */
 .rail{right:12px;top:58px;bottom:34px;width:36px}
 .rail::before{left:calc(50% - 1px);top:0;bottom:0;width:2px}
 .rail .lbl.s{top:-22px;left:50%;transform:translateX(-50%)}
@@ -97,12 +104,14 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:cro
   .handle{top:50%}
 }
 
+/* footer */
 .foot{display:flex;flex-direction:column;gap:6px}
 .meet{margin:0;font-size:15px;font-weight:500;letter-spacing:.06em;text-wrap:balance;word-break:auto-phrase}
 .mailrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
 .mail{font-size:13px;overflow-wrap:anywhere;user-select:all}
 .fine{margin:0;font-size:11px;color:var(--muted)}
 
+/* edit sheet */
 .sheet{position:fixed;inset:0;z-index:20;display:flex;justify-content:center;align-items:flex-end;background:var(--veil)}
 .sheet[hidden]{display:none}
 .panel{box-sizing:border-box;width:min(620px,100%);max-height:92%;overflow-y:auto;background:var(--sheet);color:var(--fg);border-radius:24px 24px 0 0;padding:20px 16px 28px;display:flex;flex-direction:column;gap:18px}
@@ -298,6 +307,7 @@ var $=function(s){return document.querySelector(s);};
 var clamp=function(v,a,b){return Math.min(b,Math.max(a,v));};
 var DAY=86400000;
 
+//#LOGIC-START
 var COUNTRIES={
   "日本":["東アジア",36,138],"中国":["東アジア",35,103],"韓国":["東アジア",36.5,127.8],"台湾":["東アジア",23.7,121],
   "タイ":["東南アジア",15,101],"ベトナム":["東南アジア",16,107],"シンガポール":["東南アジア",1.35,103.8],"インドネシア":["東南アジア",-2,118],
@@ -339,6 +349,7 @@ var CITIES=[
   ["ホノルル","honolulu,ハワイ",21.31,-157.86,"アメリカ"],
   ["シドニー","sydney",-33.87,151.21,"オーストラリア"]
 ];
+/* 47 prefectures: [formal name, aliases, capital lat, capital lon, region] */
 var PREFS=[
   ["北海道","ほっかいどう,hokkaido",43.06,141.35,"北海道地方"],
   ["青森県","あおもり,aomori",40.82,140.74,"東北地方"],
@@ -388,8 +399,31 @@ var PREFS=[
   ["鹿児島県","かごしま,kagoshima",31.56,130.56,"九州・沖縄地方"],
   ["沖縄県","おきなわ,okinawa",26.21,127.68,"九州・沖縄地方"]
 ];
+/* 市区町村：登録済みの自治体は都道府県・地方まで段階的に表示 */
+var MUNICIPALITIES=[
+  ["宇部市",33.951,131.246,"山口県","中国地方","うべ,ube"],
+  ["長門市",34.373,131.183,"山口県","中国地方","ながと,nagato"],
+  ["山口市",34.186,131.471,"山口県","中国地方","やまぐちし"],
+  ["下関市",33.957,130.941,"山口県","中国地方","しものせき"],
+  ["萩市",34.408,131.399,"山口県","中国地方","はぎ"],
+  ["防府市",34.052,131.562,"山口県","中国地方","ほうふ"],
+  ["周南市",34.055,131.806,"山口県","中国地方","しゅうなん"],
+  ["岩国市",34.167,132.219,"山口県","中国地方","いわくに"],
+  ["光市",33.961,131.942,"山口県","中国地方","ひかり"],
+  ["下松市",34.014,131.870,"山口県","中国地方","くだまつ"],
+  ["山陽小野田市",34.003,131.181,"山口県","中国地方","さんようおのだ"],
+  ["美祢市",34.167,131.205,"山口県","中国地方","みね"],
+  ["柳井市",33.963,132.101,"山口県","中国地方","やない"],
+  ["周防大島町",33.928,132.195,"山口県","中国地方","すおうおおしま"],
+  ["田布施町",33.954,132.042,"山口県","中国地方","たぶせ"],
+  ["平生町",33.938,132.073,"山口県","中国地方","ひらお"],
+  ["和木町",34.203,132.220,"山口県","中国地方","わき"],
+  ["上関町",33.832,132.111,"山口県","中国地方","かみのせき"],
+  ["阿武町",34.504,131.472,"山口県","中国地方","あぶ"]
+];
 var IDX=new Map();
-function skey(s){return String(s).toLowerCase().replace(/[\s ]/g,"");}
+var ALL=[];
+function skey(s){return String(s).toLowerCase().replace(/[\s　]/g,"");}
 function chainOf(e){
   var sub=COUNTRIES[e.country]?COUNTRIES[e.country][0]:null;
   var raw=["宇宙","地球",sub,e.country].concat(e.admin||[],[e.name]).filter(Boolean);
@@ -398,6 +432,7 @@ function chainOf(e){
 CITIES.forEach(function(c){
   var e={name:c[0],lat:c[2],lon:c[3],country:c[4],admin:c.slice(5)};
   e.chain=chainOf(e);
+  ALL.push(e);
   IDX.set(skey(c[0]),e);
   c[1].split(",").forEach(function(a){if(a&&!IDX.has(skey(a)))IDX.set(skey(a),e);});
 });
@@ -405,9 +440,18 @@ PREFS.forEach(function(p){
   var full=p[0],short=full==="北海道"?full:full.replace(/[都府県]$/,"");
   var e={name:full,lat:p[2],lon:p[3],country:"日本",admin:[p[4]]};
   e.chain=chainOf(e);
-  if(!IDX.has(skey(short)))IDX.set(skey(short),e);
+  var cityHasShort=IDX.has(skey(short));
+  if(!cityHasShort){e.label=short;ALL.push(e);IDX.set(skey(short),e);}
   IDX.set(skey(full),e);
   p[1].split(",").forEach(function(a){if(a&&!IDX.has(skey(a)))IDX.set(skey(a),e);});
+});
+MUNICIPALITIES.forEach(function(m){
+  var e={name:m[0],lat:m[1],lon:m[2],country:"日本",admin:[m[4],m[3]]};
+  e.chain=chainOf(e);
+  ALL.push(e);
+  IDX.set(skey(m[0]),e);
+  IDX.set(skey(m[0].replace(/[市町村]$/,"")),e);
+  m[5].split(",").forEach(function(a){if(a)IDX.set(skey(a),e);});
 });
 Object.keys(COUNTRIES).forEach(function(k){
   if(IDX.has(skey(k)))return;
@@ -416,6 +460,8 @@ Object.keys(COUNTRIES).forEach(function(k){
   e.chain=chainOf(e);
   IDX.set(skey(k),e);
 });
+/* 全国市区町村オープンデータ（Code for Fukui / CC0）。初回はネット接続が必要。 */
+var nationwideReady=false;
 var nationwideExact=new Map(),nationwideShort=new Map();
 function addMunicipalityIndex(key,e){
   key=skey(key);
@@ -444,7 +490,9 @@ function loadNationwide(){
         var ward=name.split(" ").pop();
         addMunicipalityIndex(ward,e);
       }
+      ALL.push(e);
     });
+    nationwideReady=true;
     var status=document.getElementById("geoStatus");if(status)status.textContent="全国データ読込完了："+nationwideExact.size+"自治体";
     if(typeof dl!=="undefined"&&dl){
       var frag=document.createDocumentFragment();
@@ -466,7 +514,9 @@ function loadNationwide(){
     install(data);
     try{localStorage.setItem(cacheKey,JSON.stringify(data));}catch(e){}
   }).catch(function(err){
+    console.warn("全国市区町村データを取得できませんでした。ネット接続をご確認ください。",err);
     var status=document.getElementById("geoStatus");if(status)status.textContent="全国データの取得に失敗しました。通信環境を確認して再読み込みしてください。";
+    if(typeof prevNotice==="function")prevNotice();
   });
 }
 IDX.set("地球",{name:"地球",lat:20,lon:100,chain:["宇宙","地球"]});
@@ -478,7 +528,7 @@ function lookup(q){
   if(nationwideExact.has(k))return nationwideExact.get(k);
   var matches=nationwideShort.get(k);
   if(matches&&matches.length===1)return matches[0];
-  if(matches&&matches.length>1)return null;
+  if(matches&&matches.length>1)return null; // 同名自治体は都道府県を指定
   var tries=[k,k.replace(/(市|府|県|都)$/,"")];
   for(var i=0;i<tries.length;i++){if(IDX.has(tries[i]))return IDX.get(tries[i]);}
   if(/[市区町村]$/.test(k))return null;
@@ -503,6 +553,7 @@ function resolvePlace(p){
   }
   return {ok:false,name:name};
 }
+//#LOGIC-END
 
 var GAS_URL="https://script.google.com/macros/s/AKfycbymBDEiopn1kQqlMlztwGhQUA4rLHvBAmJeASspdu1TT5vnhEE7lSyjWRarwsaMph20/exec";
 var KEY="murai-lp-proto-v1";
@@ -572,6 +623,7 @@ function loadRemote(){
   }).catch(function(){});
 }
 
+/* derived state */
 var RP=[],RA=[];
 var N=480,gx=new Float32Array(N),gy=new Float32Array(N),cl=new Uint8Array(N),pts=new Float32Array(N*2);
 (function(){
@@ -580,6 +632,7 @@ var N=480,gx=new Float32Array(N),gy=new Float32Array(N),cl=new Uint8Array(N),pts
     gx[k]=m*Math.cos(6.2831853*v);gy[k]=m*Math.sin(6.2831853*v);
   }
 })();
+/* the activity ladder, coarse to fine: belief, lifestyle, domains, current activities. An empty layer is skipped. */
 function buildLayers(){
   var one=function(s){s=String(s||"").trim();return s?[s]:[];};
   var many=function(a){return a.map(function(s){return String(s).trim();}).filter(Boolean);};
@@ -618,12 +671,14 @@ function staleDays(){
   return Math.max(0,Math.floor((Date.now()-S.updated)/DAY))+(S.demoDays||0);
 }
 
+/* DOM refs */
 var rail=$("#rail"),handle=$("#handle"),linesA=$("#linesA"),linesB=$("#linesB");
 var gEll=$("#gEll"),gX=$("#gX"),gP=$("#gP"),updEl=$("#upd"),obsEl=$("#obsmsg"),badge=$("#badge");
 var cv=$("#map"),ctx=cv.getContext("2d");
 var mqWide=window.matchMedia("(min-width:760px)");
 var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/* momentum backdrop: streaks scatter in every direction when the activity side is blurred, and line up into one stream as it sharpens */
 var fv=$("#flow"),fx=fv.getContext("2d"),FW=0,FH=0,FM=90,fp=[],lastNow=0;
 function gauss(){var u=Math.random()||1e-6,v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(6.2831853*v);}
 for(var fi=0;fi<FM;fi++)fp.push({x:Math.random(),y:Math.random(),g:gauss(),h:gauss()});
@@ -654,6 +709,7 @@ function drawFlow(now){
   fx.stroke();
 }
 
+/* observation state */
 var tTarget=0.5,tt=0.5,interacted=false,dragging=false;
 function setT(v){tTarget=clamp(v,0,1);interacted=true;}
 function fromEvent(e){
@@ -686,6 +742,7 @@ function updateHandle(){
   handle.setAttribute("aria-valuetext","位置の鮮明さ "+pos+"%、活動の鮮明さ "+(100-pos)+"%");
 }
 
+/* gauge: sigma_x * sigma_p = hbar/2 (hbar=1), symmetric at the centre */
 var SX0=0.0707107;
 function updateGauge(){
   var sx=SX0*Math.pow(100,tt),sp=0.5/sx;
@@ -695,6 +752,7 @@ function updateGauge(){
   gX.textContent=positionPct+"%";gP.textContent=(100-positionPct)+"%";
 }
 
+/* labels at a given resolution */
 function levelItems(list,f){
   var out=[],m=new Map(),primary=null;
   list.forEach(function(it){
@@ -734,11 +792,9 @@ function applyLines(linesEl,out,dist,pct,which,focusWeight){
   var key=out.map(function(o){return o.lab+":"+Math.round(o.w*100);}).join("|");
   if(which==="a"){if(key!==keyA){keyA=key;renderLines(linesEl,out,pct);}}
   else{if(key!==keyB){keyB=key;renderLines(linesEl,out,pct);}}
-  var trans=Math.max(0,(Math.min(dist,0.5)*2-0.35)/0.65);
-  var defocus=Math.pow(1-focusWeight,1.6);
-  var blurPx=trans*2.4+defocus*2.6;
-  linesEl.style.filter=blurPx>0.15?"blur("+blurPx.toFixed(1)+"px)":"none";
-  linesEl.style.opacity=(1-0.14*trans-0.22*defocus).toFixed(2);
+  /* 片方を100%にしても反対側の文字がぼやけて読めなくなるのを防ぎ、常にクッキリ表示する */
+  linesEl.style.filter="none";
+  linesEl.style.opacity=(0.68+0.32*focusWeight).toFixed(2);
 }
 function paneText(list,f,linesEl,pct,which,focusWeight){
   var r=levelItems(list,f);
@@ -757,7 +813,8 @@ function updateUpd(){
   badge.hidden=!S.sample;
 }
 
-var W=0,H=0,dpr=1,obs=null,obsTimer=0;
+/* map canvas */
+var W=0,H=0,dpr=1,cam={lat:30,lon:120,init:false},obs=null,obsTimer=0;
 function resize(){
   var r=cv.parentElement.getBoundingClientRect();
   dpr=Math.min(2,window.devicePixelRatio||1);
@@ -766,15 +823,18 @@ function resize(){
 }
 if(window.ResizeObserver){new ResizeObserver(resize).observe($("#paneA"));new ResizeObserver(resizeFlow).observe($("#paneB"));}
 window.addEventListener("resize",function(){resize();resizeFlow();});
+/* 抽象的な観測雲：地図や緯度経度の描画は行わない */
 function drawMap(now){
   if(!W||!H)return;
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   var days=staleDays();
   var m=Math.min(W,H);
+  /* 位置100%で一点に収束、位置0%で画面全体へ拡散 */
   var spread=Math.pow(tt,1.45);
   var sigma=1.8 + m*0.55*spread + Math.min(days,90)*0.8;
   var cx=W*0.5,cy=H*0.52;
+  /* 濃淡のある柔らかな中心の光。曖昧になるほど消える */
   var glow=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(28,sigma*1.35));
   glow.addColorStop(0,"rgba(236,228,204,"+(0.10*(1-spread)).toFixed(3)+")");
   glow.addColorStop(1,"rgba(236,228,204,0)");
@@ -790,6 +850,7 @@ function drawMap(now){
     ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
   }
   ctx.globalAlpha=1;
+  /* 明確な観測位置を示す核は、拡散とともに薄れる */
   ctx.fillStyle="rgba(236,228,204,"+(0.92*(1-spread)).toFixed(3)+")";
   ctx.beginPath();ctx.arc(cx,cy,2.4,0,Math.PI*2);ctx.fill();
   if(obs){
@@ -814,6 +875,7 @@ cv.addEventListener("click",function(){
   obsTimer=setTimeout(function(){obsEl.textContent="";},3400);
 });
 
+/* main loop */
 function frame(now){
   if(!interacted&&!reduce)tTarget=0.5+0.38*Math.sin(now/2600);
   tt+=(tTarget-tt)*0.14;
@@ -821,6 +883,7 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 
+/* footer copy */
 $("#copyBtn").addEventListener("click",function(){
   var btn=this,mail=$("#mail");
   var done=function(t){btn.textContent=t;setTimeout(function(){btn.textContent="コピー";},1600);};
@@ -828,10 +891,12 @@ $("#copyBtn").addEventListener("click",function(){
   try{navigator.clipboard.writeText(mail.textContent).then(function(){done("コピーしました");},sel);}catch(e){sel();}
 });
 
+/* edit sheet */
 var sheet=$("#sheet"),placeRows=$("#placeRows"),actRows=$("#actRows"),days=$("#days"),daysOut=$("#daysOut");
 var dl=$("#citylist");
 CITIES.forEach(function(c){var o=document.createElement("option");o.value=c[0];dl.appendChild(o);});
 PREFS.forEach(function(p){var o=document.createElement("option");o.value=p[0];dl.appendChild(o);});
+MUNICIPALITIES.forEach(function(m){var o=document.createElement("option");o.value=m[0];dl.appendChild(o);});
 Object.keys(COUNTRIES).concat(["地球","宇宙"]).forEach(function(c){var o=document.createElement("option");o.value=c;dl.appendChild(o);});
 
 function touched(){
@@ -864,6 +929,7 @@ function placeRow(p,i){
   refresh();
   return row;
 }
+/* one text field with a delete button; used for activities and for domains */
 function listRow(id,ph,label,get,set,remove){
   var row=document.createElement("div");row.className="row";
   var line=document.createElement("div");line.className="rowline";
@@ -902,6 +968,7 @@ $("#resetBtn").addEventListener("click",function(){S=sample();save();derive();bu
 function openSheet(){buildForm();sheet.hidden=false;$("#closeBtn").focus();}
 function closeSheet(){sheet.hidden=true;$("#editBtn").focus();}
 
+/* password gate: verified directly against GAS ADMIN_PASSWORD */
 var unlocked=false;
 var gate=$("#gate"),gpw=$("#gpw"),gpw2=$("#gpw2"),gmsg=$("#gateMsg"),forgotBtn=$("#forgotBtn");
 function openGate(){
