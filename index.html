@@ -31,6 +31,8 @@ body{background:var(--bg);color:var(--fg);font-family:var(--jp);font-size:14px;l
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .who{min-width:0}
 .role{font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--muted)}
+.worktitle{font-size:12px;letter-spacing:.16em;font-weight:700;color:var(--muted);margin-bottom:5px}
+.worksub{font-size:11px;letter-spacing:.055em;color:var(--muted);margin:5px 0 0}
 h1{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:14px;font-weight:700;font-size:clamp(24px,6vw,32px);letter-spacing:.14em;line-height:1.25;text-wrap:balance}
 h1 .en{font-family:var(--mono);font-weight:400;font-size:13px;letter-spacing:.04em;color:var(--muted)}
 .ket{margin-top:2px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
@@ -151,9 +153,10 @@ input[type=range]{width:100%;accent-color:var(--fg)}
 <div class="app">
   <header class="head">
     <div class="who">
-      <div class="role">高等遊民</div>
+      <div class="worktitle">観測する名刺</div>
       <h1><span>村井 陽介</span><span class="en">Yosuke Murai</span></h1>
       <div class="ket mono">|Ψ⟩ = c₁|位置⟩ + c₂|活動⟩</div>
+      <p class="worksub">見る角度によって、私の輪郭は変わる。</p>
     </div>
     <div class="tools">
       <span class="badge mono" id="badge">SAMPLE</span>
@@ -185,15 +188,17 @@ input[type=range]{width:100%;accent-color:var(--fg)}
     </div>
   </main>
 
-  <div class="meter" aria-hidden="true">
-    <svg viewBox="-50 -50 100 100">
-      <defs><clipPath id="gclip"><rect x="-48" y="-48" width="96" height="96" rx="10"/></clipPath></defs>
-      <rect x="-48" y="-48" width="96" height="96" rx="10" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+  <div class="meter">
+    <svg viewBox="-60 -60 120 120" role="img" aria-label="縦軸は位置の不確かさΔX、横軸は活動の不確かさΔP。楕円の広がりが観測に応じて変化します">
+      <defs><clipPath id="gclip"><rect x="-47" y="-46" width="94" height="92" rx="8"/></clipPath></defs>
+      <rect x="-47" y="-46" width="94" height="92" rx="8" fill="none" stroke="currentColor" stroke-opacity=".18"/>
       <g clip-path="url(#gclip)">
-        <line x1="-48" y1="0" x2="48" y2="0" stroke="currentColor" stroke-opacity=".3"/>
-        <line x1="0" y1="-48" x2="0" y2="48" stroke="currentColor" stroke-opacity=".3"/>
-        <ellipse id="gEll" cx="0" cy="0" rx="18" ry="18" fill="currentColor" fill-opacity=".8"/>
+        <line x1="-47" y1="0" x2="47" y2="0" stroke="currentColor" stroke-opacity=".4"/>
+        <line x1="0" y1="-46" x2="0" y2="46" stroke="currentColor" stroke-opacity=".4"/>
+        <ellipse id="gEll" cx="0" cy="0" rx="18" ry="18" fill="currentColor" fill-opacity=".7"/>
       </g>
+      <text x="-53" y="3" font-size="10" fill="currentColor" font-family="monospace" text-anchor="middle">ΔX</text>
+      <text x="0" y="57" font-size="10" fill="currentColor" font-family="monospace" text-anchor="middle">ΔP</text>
     </svg>
     <div class="txt mono">
       <div class="gr"><span class="k">位置の鮮明さ</span><b id="gX">50%</b></div>
@@ -649,7 +654,7 @@ function drawFlow(now){
   fx.setTransform(dpr,0,0,dpr,0,0);fx.clearRect(0,0,FW,FH);
   var spread=3.1*Math.pow(1-tt,1.4)+0.03;
   fx.lineCap="round";fx.lineWidth=1.6;
-  fx.strokeStyle="rgba(242,241,238,"+(0.1+0.12*tt).toFixed(2)+")";
+  fx.strokeStyle="rgba(242,241,238,"+(0.07+0.34*tt).toFixed(2)+")";
   fx.beginPath();
   for(var i=0;i<FM;i++){
     var p=fp[i],ang=-0.45+p.g*spread*0.6;
@@ -702,7 +707,7 @@ var SX0=0.0707107;
 function updateGauge(){
   var sx=SX0*Math.pow(100,tt),sp=0.5/sx;
   var rx=18*sx/0.70711,ry=18*sp/0.70711;
-  gEll.setAttribute("rx",rx.toFixed(2));gEll.setAttribute("ry",ry.toFixed(2));
+  gEll.setAttribute("rx",ry.toFixed(2));gEll.setAttribute("ry",rx.toFixed(2));
   var positionPct=Math.round((1-tt)*100);
   gX.textContent=positionPct+"%";gP.textContent=(100-positionPct)+"%";
 }
@@ -747,9 +752,10 @@ function applyLines(linesEl,out,dist,pct,which){
   var key=out.map(function(o){return o.lab+":"+Math.round(o.w*100);}).join("|");
   if(which==="a"){if(key!==keyA){keyA=key;renderLines(linesEl,out,pct);}}
   else{if(key!==keyB){keyB=key;renderLines(linesEl,out,pct);}}
-  var d=Math.min(dist,0.5)*2;
-  linesEl.style.filter=d>0.04?"blur("+(d*8).toFixed(1)+"px)":"none";
-  linesEl.style.opacity=(1-0.45*d).toFixed(2);
+  /* 文字は観測値にかかわらず常に明瞭に表示する。
+     不確かさは背景の粒子分布と表示する情報の階層で表現する。 */
+  linesEl.style.filter="none";
+  linesEl.style.opacity="1";
 }
 function paneText(list,f,linesEl,pct,which){
   var r=levelItems(list,f);
