@@ -31,6 +31,8 @@ body{background:var(--bg);color:var(--fg);font-family:var(--jp);font-size:14px;l
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .who{min-width:0}
 .role{font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--muted)}
+.worktitle{font-size:12px;letter-spacing:.16em;font-weight:700;color:var(--muted);margin-bottom:5px}
+.worksub{font-size:11px;letter-spacing:.055em;color:var(--muted);margin:5px 0 0}
 h1{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:14px;font-weight:700;font-size:clamp(24px,6vw,32px);letter-spacing:.14em;line-height:1.25;text-wrap:balance}
 h1 .en{font-family:var(--mono);font-weight:400;font-size:13px;letter-spacing:.04em;color:var(--muted)}
 .ket{margin-top:2px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
@@ -151,9 +153,10 @@ input[type=range]{width:100%;accent-color:var(--fg)}
 <div class="app">
   <header class="head">
     <div class="who">
-      <div class="role">高等遊民</div>
+      <div class="worktitle">観測する名刺</div>
       <h1><span>村井 陽介</span><span class="en">Yosuke Murai</span></h1>
       <div class="ket mono">|Ψ⟩ = c₁|位置⟩ + c₂|活動⟩</div>
+      <p class="worksub">見る角度によって、私の輪郭は変わる。</p>
     </div>
     <div class="tools">
       <span class="badge mono" id="badge">SAMPLE</span>
@@ -185,15 +188,17 @@ input[type=range]{width:100%;accent-color:var(--fg)}
     </div>
   </main>
 
-  <div class="meter" aria-hidden="true">
-    <svg viewBox="-50 -50 100 100">
-      <defs><clipPath id="gclip"><rect x="-48" y="-48" width="96" height="96" rx="10"/></clipPath></defs>
-      <rect x="-48" y="-48" width="96" height="96" rx="10" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+  <div class="meter">
+    <svg viewBox="-60 -60 120 120" role="img" aria-label="縦軸は位置の不確かさΔX、横軸は活動の不確かさΔP。楕円の広がりが観測に応じて変化します">
+      <defs><clipPath id="gclip"><rect x="-47" y="-46" width="94" height="92" rx="8"/></clipPath></defs>
+      <rect x="-47" y="-46" width="94" height="92" rx="8" fill="none" stroke="currentColor" stroke-opacity=".18"/>
       <g clip-path="url(#gclip)">
-        <line x1="-48" y1="0" x2="48" y2="0" stroke="currentColor" stroke-opacity=".3"/>
-        <line x1="0" y1="-48" x2="0" y2="48" stroke="currentColor" stroke-opacity=".3"/>
-        <ellipse id="gEll" cx="0" cy="0" rx="18" ry="18" fill="currentColor" fill-opacity=".8"/>
+        <line x1="-47" y1="0" x2="47" y2="0" stroke="currentColor" stroke-opacity=".4"/>
+        <line x1="0" y1="-46" x2="0" y2="46" stroke="currentColor" stroke-opacity=".4"/>
+        <ellipse id="gEll" cx="0" cy="0" rx="18" ry="18" fill="currentColor" fill-opacity=".7"/>
       </g>
+      <text x="-53" y="3" font-size="10" fill="currentColor" font-family="monospace" text-anchor="middle">ΔX</text>
+      <text x="0" y="57" font-size="10" fill="currentColor" font-family="monospace" text-anchor="middle">ΔP</text>
     </svg>
     <div class="txt mono">
       <div class="gr"><span class="k">位置の鮮明さ</span><b id="gX">50%</b></div>
@@ -267,10 +272,10 @@ input[type=range]{width:100%;accent-color:var(--fg)}
     </section>
 
     <div class="actions">
-      <button class="btn" id="syncNowBtn" type="button">今すぐクラウド反映</button>
-      <button class="btn" id="resetBtn" type="button">初期値に戻す</button>
+      <button class="btn" id="resetBtn" type="button">サンプルに戻す</button>
+      <button class="btn" id="changePw" type="button">パスワードを変更</button>
     </div>
-    <p class="note" id="syncStatus" role="status">クラウド連携モード：編集すると全員の画面に自動反映されます。</p>
+    <p class="note">入力内容とパスワードは、このブラウザの中にだけ保存されます。パスワードは簡易的な鍵です。他の人の画面にも反映される本格的な保護は、公開版で用意します。</p>
   </div>
 </div>
 
@@ -552,10 +557,8 @@ function resolvePlace(p){
 }
 //#LOGIC-END
 
-var GAS_URL="https://script.google.com/macros/s/AKfycbymBDEiopn1kQqlMlztwGhQUA4rLHvBAmJeASspdu1TT5vnhEE7lSyjWRarwsaMph20/exec";
 var KEY="murai-lp-proto-v1";
-var ADMIN_PW="";
-function sample(){return {sample:false,
+function sample(){return {sample:true,
   places:[{q:"大阪",w:100,country:""}],
   belief:"遊びながら社会と関わる",
   style:"都会＋X（地域・海外）の多拠点生活",
@@ -564,61 +567,21 @@ function sample(){return {sample:false,
   kw:"麻雀・旅行・食べ歩き・哲学・数学・ジャグリング・地域創生・ZEN大学",
   updated:Date.now(),demoDays:0};}
 var MAX_ACTS=12,MAX_DOMS=8;
-function normalizeState(raw){
-  var d=sample();
-  if(!raw||typeof raw!=="object")return d;
-  if(Array.isArray(raw.places)&&raw.places.length)d.places=raw.places.slice(0,1);
-  if(!d.places.length)d.places.push({q:"",w:100,country:""});
-  d.places[0].w=100;
-  if(Array.isArray(raw.acts))d.acts=raw.acts.slice(0,MAX_ACTS).map(function(a){return {q:String(a&&a.q||"")};});
-  if(typeof raw.kw==="string")d.kw=raw.kw;
-  if(typeof raw.belief==="string")d.belief=raw.belief;
-  if(typeof raw.style==="string")d.style=raw.style;
-  if(Array.isArray(raw.domains))d.domains=raw.domains.slice(0,MAX_DOMS).map(String);
-  if(typeof raw.updated==="number")d.updated=raw.updated;
-  if(typeof raw.demoDays==="number")d.demoDays=raw.demoDays;
-  d.sample=!!raw.sample;
-  return d;
-}
 var S=null;
-try{S=normalizeState(JSON.parse(localStorage.getItem(KEY)));}catch(e){S=sample();}
-var saveTimer=null;
-function setSyncStatus(txt){
-  var el=document.getElementById("syncStatus");
-  if(el)el.textContent=txt;
-}
-function save(immediate){
-  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
-  if(!ADMIN_PW)return;
-  clearTimeout(saveTimer);
-  setSyncStatus("クラウドへ保存待ち…");
-  saveTimer=setTimeout(function(){
-    setSyncStatus("クラウドへ保存中…");
-    fetch(GAS_URL,{
-      method:"POST",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({password:ADMIN_PW,data:S})
-    }).then(function(r){return r.json();}).then(function(res){
-      if(res&&res.ok){
-        setSyncStatus("クラウド保存完了（全員に反映済み）");
-      }else{
-        setSyncStatus("保存エラー："+(res&&res.error?res.error:"認証失敗"));
-      }
-    }).catch(function(){
-      setSyncStatus("通信エラー：オフラインまたは接続失敗");
-    });
-  },immediate?10:800);
-}
-function loadRemote(){
-  fetch(GAS_URL+"?t="+Date.now()).then(function(r){return r.json();}).then(function(data){
-    if(data&&data.places&&data.acts){
-      S=normalizeState(data);
-      try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
-      derive();
-      if(!sheet.hidden)buildForm();
-    }
-  }).catch(function(){});
-}
+try{S=JSON.parse(localStorage.getItem(KEY));}catch(e){S=null;}
+if(!S||!S.places||!S.acts)S=sample();
+/* the place is a single entry; older saved data may hold several */
+S.places=S.places.slice(0,1);
+if(!S.places.length)S.places.push({q:"",w:100,country:""});
+S.places[0].w=100;
+S.acts=S.acts.slice(0,MAX_ACTS).map(function(a){return {q:String(a&&a.q||"")};});
+var DEF=sample();
+if(typeof S.kw!=="string")S.kw=DEF.kw;
+if(typeof S.belief!=="string")S.belief=DEF.belief;
+if(typeof S.style!=="string")S.style=DEF.style;
+if(!Array.isArray(S.domains))S.domains=DEF.domains.slice();
+S.domains=S.domains.slice(0,MAX_DOMS).map(String);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 
 /* derived state */
 var RP=[],RA=[];
@@ -691,7 +654,7 @@ function drawFlow(now){
   fx.setTransform(dpr,0,0,dpr,0,0);fx.clearRect(0,0,FW,FH);
   var spread=3.1*Math.pow(1-tt,1.4)+0.03;
   fx.lineCap="round";fx.lineWidth=1.6;
-  fx.strokeStyle="rgba(242,241,238,"+(0.1+0.12*tt).toFixed(2)+")";
+  fx.strokeStyle="rgba(242,241,238,"+(0.07+0.34*tt).toFixed(2)+")";
   fx.beginPath();
   for(var i=0;i<FM;i++){
     var p=fp[i],ang=-0.45+p.g*spread*0.6;
@@ -744,7 +707,7 @@ var SX0=0.0707107;
 function updateGauge(){
   var sx=SX0*Math.pow(100,tt),sp=0.5/sx;
   var rx=18*sx/0.70711,ry=18*sp/0.70711;
-  gEll.setAttribute("rx",rx.toFixed(2));gEll.setAttribute("ry",ry.toFixed(2));
+  gEll.setAttribute("rx",ry.toFixed(2));gEll.setAttribute("ry",rx.toFixed(2));
   var positionPct=Math.round((1-tt)*100);
   gX.textContent=positionPct+"%";gP.textContent=(100-positionPct)+"%";
 }
@@ -789,9 +752,10 @@ function applyLines(linesEl,out,dist,pct,which){
   var key=out.map(function(o){return o.lab+":"+Math.round(o.w*100);}).join("|");
   if(which==="a"){if(key!==keyA){keyA=key;renderLines(linesEl,out,pct);}}
   else{if(key!==keyB){keyB=key;renderLines(linesEl,out,pct);}}
-  var d=Math.min(dist,0.5)*2;
-  linesEl.style.filter=d>0.04?"blur("+(d*8).toFixed(1)+"px)":"none";
-  linesEl.style.opacity=(1-0.45*d).toFixed(2);
+  /* 文字は観測値にかかわらず常に明瞭に表示する。
+     不確かさは背景の粒子分布と表示する情報の階層で表現する。 */
+  linesEl.style.filter="none";
+  linesEl.style.opacity="1";
 }
 function paneText(list,f,linesEl,pct,which){
   var r=levelItems(list,f);
@@ -965,52 +929,77 @@ $("#resetBtn").addEventListener("click",function(){S=sample();save();derive();bu
 function openSheet(){buildForm();sheet.hidden=false;$("#closeBtn").focus();}
 function closeSheet(){sheet.hidden=true;$("#editBtn").focus();}
 
-/* password gate: verified directly against GAS ADMIN_PASSWORD */
-var unlocked=false;
+/* password gate: a light lock for the edit screen, stored only in this browser */
+var PWK="murai-lp-proto-pw-v1",unlocked=false,gateMode="enter",forgotArmed=false;
 var gate=$("#gate"),gpw=$("#gpw"),gpw2=$("#gpw2"),gmsg=$("#gateMsg"),forgotBtn=$("#forgotBtn");
-function openGate(){
+function getPw(){try{return JSON.parse(localStorage.getItem(PWK));}catch(e){return null;}}
+function bytesHex(buf){return Array.prototype.map.call(new Uint8Array(buf),function(b){return ("0"+b.toString(16)).slice(-2);}).join("");}
+function newSalt(){
+  var a=new Uint8Array(12);
+  if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);
+  else for(var i=0;i<12;i++)a[i]=Math.floor(Math.random()*256);
+  return bytesHex(a);
+}
+function hashPw(pw,salt){
+  var data=salt+":"+pw;
+  if(window.crypto&&crypto.subtle&&window.TextEncoder){
+    return crypto.subtle.digest("SHA-256",new TextEncoder().encode(data)).then(bytesHex);
+  }
+  var h1=0xdeadbeef,h2=0x41c6ce57;
+  for(var i=0;i<data.length;i++){var c=data.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return Promise.resolve((h2>>>0).toString(16)+"-"+(h1>>>0).toString(16));
+}
+function openGate(mode){
+  var set=mode==="set";
+  gateMode=mode;forgotArmed=false;
   gpw.value="";gpw2.value="";gmsg.textContent="";
-  $("#gateTitle").textContent="管理者パスワードを入力";
-  $("#gateHint").textContent="Apps Script に設定したパスワード（初期値: 1234）を入力してください。";
-  gpw2.hidden=true;
-  gpw.autocomplete="current-password";
-  $("#gateOk").textContent="認証して開く";
-  forgotBtn.hidden=true;
+  $("#gateTitle").textContent=set?"パスワードを決める":"パスワードを入力";
+  $("#gateHint").textContent=set?"編集画面を開くときのパスワードです。4文字以上で決めてください。":"編集画面を開くには、パスワードが必要です。";
+  gpw2.hidden=!set;
+  gpw.autocomplete=set?"new-password":"current-password";
+  $("#gateOk").textContent=set?"決めて開く":"開く";
+  forgotBtn.hidden=set;
+  forgotBtn.textContent="パスワードを忘れた";
   gate.hidden=false;gpw.focus();
 }
 function closeGate(){gate.hidden=true;(sheet.hidden?$("#editBtn"):$("#closeBtn")).focus();}
 $("#gateForm").addEventListener("submit",function(e){
   e.preventDefault();
-  var pw=gpw.value.trim();
-  if(!pw){gmsg.textContent="パスワードを入力してください。";return;}
-  gmsg.textContent="サーバーと照合中…";
-  $("#gateOk").disabled=true;
-  fetch(GAS_URL,{
-    method:"POST",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify({password:pw,data:S})
-  }).then(function(r){return r.json();}).then(function(res){
-    $("#gateOk").disabled=false;
-    if(res&&res.ok){
-      ADMIN_PW=pw;
-      unlocked=true;
-      gate.hidden=true;
-      openSheet();
-      setSyncStatus("認証完了・クラウド連携中");
-    }else{
-      gmsg.textContent=(res&&res.error)?res.error:"パスワードが違います。";
-      gpw.value="";gpw.focus();
-    }
-  }).catch(function(){
-    $("#gateOk").disabled=false;
-    gmsg.textContent="通信エラーが発生しました。ネット接続を確認してください。";
-  });
+  var pw=gpw.value,rec;
+  if(gateMode==="set"){
+    if(pw.length<4){gmsg.textContent="4文字以上にしてください。";return;}
+    if(pw!==gpw2.value){gmsg.textContent="2回の入力が一致しません。";return;}
+    var salt=newSalt();
+    hashPw(pw,salt).then(function(h){
+      try{localStorage.setItem(PWK,JSON.stringify({salt:salt,hash:h}));}catch(x){}
+      unlocked=true;gate.hidden=true;openSheet();
+    });
+  }else{
+    rec=getPw();
+    if(!rec){openGate("set");return;}
+    hashPw(pw,rec.salt).then(function(h){
+      if(h===rec.hash){unlocked=true;gate.hidden=true;openSheet();}
+      else{gmsg.textContent="パスワードが違います。";gpw.value="";gpw.focus();}
+    });
+  }
+});
+forgotBtn.addEventListener("click",function(){
+  if(!forgotArmed){
+    forgotArmed=true;
+    forgotBtn.textContent="消して作り直す（もう一度押すと実行）";
+    gmsg.textContent="忘れた場合は、このブラウザに保存した入力内容もすべて消えます。";
+    return;
+  }
+  try{localStorage.removeItem(PWK);localStorage.removeItem(KEY);}catch(x){}
+  S=sample();derive();unlocked=false;openGate("set");
 });
 $("#gateClose").addEventListener("click",closeGate);
 gate.addEventListener("click",function(e){if(e.target===gate)closeGate();});
-$("#syncNowBtn").addEventListener("click",function(){save(true);});
+$("#changePw").addEventListener("click",function(){openGate("set");});
 $("#editBtn").addEventListener("click",function(){
-  if(unlocked)openSheet();else openGate();
+  if(unlocked)openSheet();else openGate(getPw()?"enter":"set");
 });
 $("#closeBtn").addEventListener("click",closeSheet);
 sheet.addEventListener("click",function(e){if(e.target===sheet)closeSheet();});
@@ -1019,7 +1008,7 @@ document.addEventListener("keydown",function(e){
   if(!gate.hidden)closeGate();else if(!sheet.hidden)closeSheet();
 });
 
-derive();resize();resizeFlow();loadNationwide();loadRemote();requestAnimationFrame(frame);
+derive();resize();resizeFlow();loadNationwide();requestAnimationFrame(frame);
 })();
 </script>
 
