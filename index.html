@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex, nofollow, noarchive"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>観測する名刺</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
@@ -157,7 +157,6 @@ input[type=range]{width:100%;accent-color:var(--fg)}
       <div class="ket">見る角度によって、私の輪郭は変わる。</div>
     </div>
     <div class="tools" id="tools" hidden>
-      <span class="badge mono" id="badge">SAMPLE</span>
       <button class="btn" id="editBtn" type="button">編集</button>
     </div>
   </header>
@@ -213,7 +212,7 @@ input[type=range]{width:100%;accent-color:var(--fg)}
   <footer class="foot">
     <p class="meet">興味がある方、ぜひ会って話しましょう。</p>
     <div class="mailrow">
-      <span class="mail mono" id="mail">moonlight2007@gmail.com</span>
+      <span class="mail mono" id="mail"></span>
       <button class="btn" id="copyBtn" type="button">コピー</button>
     </div>
   </footer>
@@ -673,7 +672,7 @@ function staleDays(){
 
 /* DOM refs */
 var rail=$("#rail"),handle=$("#handle"),linesA=$("#linesA"),linesB=$("#linesB");
-var gEll=$("#gEll"),gX=$("#gX"),gP=$("#gP"),updEl=$("#upd"),obsEl=$("#obsmsg"),badge=$("#badge");
+var gEll=$("#gEll"),gX=$("#gX"),gP=$("#gP"),updEl=$("#upd"),obsEl=$("#obsmsg");
 var cv=$("#map"),ctx=cv.getContext("2d");
 var mqWide=window.matchMedia("(min-width:760px)");
 var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -810,7 +809,6 @@ function updateText(){
 function updateUpd(){
   var d=staleDays();
   updEl.textContent=(d>0?"更新 "+d+"日前":"更新 今日")+" · タップで観測";
-  badge.hidden=!S.sample;
 }
 
 /* map canvas */
@@ -1022,6 +1020,7 @@ document.addEventListener("keydown",function(e){
   if(!gate.hidden)closeGate();else if(!sheet.hidden)closeSheet();
 });
 
+document.getElementById("mail").textContent=["moonlight2007","gmail.com"].join("@");
 if(new URLSearchParams(location.search).has("edit")){var t=document.getElementById("tools");if(t)t.hidden=false;}
 derive();resize();resizeFlow();loadNationwide();loadRemote();requestAnimationFrame(frame);
 })();
