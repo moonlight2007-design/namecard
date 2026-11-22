@@ -792,9 +792,9 @@ function applyLines(linesEl,out,dist,pct,which,focusWeight){
   var key=out.map(function(o){return o.lab+":"+Math.round(o.w*100);}).join("|");
   if(which==="a"){if(key!==keyA){keyA=key;renderLines(linesEl,out,pct);}}
   else{if(key!==keyB){keyB=key;renderLines(linesEl,out,pct);}}
-  /* 初期状態(50%)では両方クッキリ表示し、片方に寄せた時だけ反対側を少し落とす */
+  /* どの位置(0%〜100%)でも粒度・抽象度が変わるだけで、文字自体は常にクッキリ表示する */
   linesEl.style.filter="none";
-  linesEl.style.opacity=(focusWeight>=0.48?1:0.55+0.9*focusWeight).toFixed(2);
+  linesEl.style.opacity="1";
 }
 function paneText(list,f,linesEl,pct,which,focusWeight){
   var r=levelItems(list,f);
@@ -877,6 +877,7 @@ cv.addEventListener("click",function(){
 
 /* main loop */
 function frame(now){
+  if(!interacted&&!reduce)tTarget=0.5+0.5*Math.sin(now/6500);
   tt+=(tTarget-tt)*0.14;
   updateHandle();updateGauge();updateText();updateUpd();drawMap(now);drawFlow(now);
   requestAnimationFrame(frame);
