@@ -156,7 +156,7 @@ input[type=range]{width:100%;accent-color:var(--fg)}
       <div class="ket mono">|Ψ⟩ = c₁|位置⟩ + c₂|活動⟩</div>
       <div class="ket">見る角度によって、私の輪郭は変わる。</div>
     </div>
-    <div class="tools">
+    <div class="tools" id="tools" hidden>
       <span class="badge mono" id="badge">SAMPLE</span>
       <button class="btn" id="editBtn" type="button">編集</button>
     </div>
@@ -201,7 +201,7 @@ input[type=range]{width:100%;accent-color:var(--fg)}
     <div class="txt mono">
       <div class="gr"><span class="k">位置の鮮明さ</span><b id="gX">50%</b></div>
       <div class="gr"><span class="k">活動の鮮明さ</span><b id="gP">50%</b></div>
-      <div class="g2">ΔX · ΔP ≥ ℏ/2</div>
+      <div class="g2">ΔX · ΔP = ℏ/2（一定）</div>
     </div>
   </div>
 
@@ -792,9 +792,9 @@ function applyLines(linesEl,out,dist,pct,which,focusWeight){
   var key=out.map(function(o){return o.lab+":"+Math.round(o.w*100);}).join("|");
   if(which==="a"){if(key!==keyA){keyA=key;renderLines(linesEl,out,pct);}}
   else{if(key!==keyB){keyB=key;renderLines(linesEl,out,pct);}}
-  /* 片方を100%にしても反対側の文字がぼやけて読めなくなるのを防ぎ、常にクッキリ表示する */
+  /* 初期状態(50%)では両方クッキリ表示し、片方に寄せた時だけ反対側を少し落とす */
   linesEl.style.filter="none";
-  linesEl.style.opacity=(0.68+0.32*focusWeight).toFixed(2);
+  linesEl.style.opacity=(focusWeight>=0.48?1:0.55+0.9*focusWeight).toFixed(2);
 }
 function paneText(list,f,linesEl,pct,which,focusWeight){
   var r=levelItems(list,f);
@@ -877,7 +877,6 @@ cv.addEventListener("click",function(){
 
 /* main loop */
 function frame(now){
-  if(!interacted&&!reduce)tTarget=0.5+0.38*Math.sin(now/2600);
   tt+=(tTarget-tt)*0.14;
   updateHandle();updateGauge();updateText();updateUpd();drawMap(now);drawFlow(now);
   requestAnimationFrame(frame);
@@ -1022,6 +1021,7 @@ document.addEventListener("keydown",function(e){
   if(!gate.hidden)closeGate();else if(!sheet.hidden)closeSheet();
 });
 
+if(new URLSearchParams(location.search).has("edit")){var t=document.getElementById("tools");if(t)t.hidden=false;}
 derive();resize();resizeFlow();loadNationwide();loadRemote();requestAnimationFrame(frame);
 })();
 </script>
